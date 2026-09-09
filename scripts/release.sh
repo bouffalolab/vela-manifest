@@ -25,11 +25,11 @@ INT_PHYRF="${INT_GERRIT}/bouffalo_sdk/phyrf"
 
 # github 目标仓
 GH_ORG="git@github.com:bouffalolab"
-GH_VENDOR="${GH_ORG}/vendor_bouffalolab.git"
+GH_VENDOR="${GH_ORG}/vela-vendor-bouffalolab.git"
 GH_LHAL="${GH_ORG}/bl_lhal.git"
 GH_WIRELESS="${GH_ORG}/bl_wireless.git"          # 预编译库仓
 GH_PHYRF="${GH_ORG}/bl_phyrf.git"                # 预编译库仓
-GH_SDK="${GH_ORG}/bouffalo_vela_sdk.git"         # manifest / 发版入口仓
+GH_SDK="${GH_ORG}/vela-manifest.git"            # manifest / 发版入口仓
 
 # RISC-V 工具链（编 wireless/phyrf 用，必须与 openvela trunk-5.5 一致）
 # TODO: 指向 openvela prebuilts 里的 riscv-none-elf，保证 ABI 一致
@@ -40,7 +40,7 @@ mkdir -p "${WORK}"
 echo ">>> 工作目录: ${WORK}"
 
 # ============================================================================
-# 步骤 1：镜像源码仓（vendor_bouffalolab / lhal）—— 直接 push 镜像
+# 步骤 1：镜像源码仓（vela-vendor-bouffalolab / lhal）—— 直接 push 镜像
 # ============================================================================
 mirror_src() {
   local int_url="$1" gh_url="$2" tag="$3"
@@ -102,7 +102,7 @@ EOF
 # ============================================================================
 freeze_manifest() {
   echo ">>> [freeze] 生成 tags/bl-vela-sdk-${VERSION}.xml"
-  local sdk="${WORK}/bouffalo_vela_sdk"
+  local sdk="${WORK}/vela-manifest"
   git clone "${GH_SDK}" "${sdk}"
   local tree="${WORK}/tree"
   mkdir -p "${tree}"
@@ -128,10 +128,10 @@ make_github_release() {
   echo ">>> [release] gh release create bl-vela-sdk-${VERSION}"
   # TODO: 用 gh CLI；附上冻结 manifest 与 SBOM
   gh release create "bl-vela-sdk-${VERSION}" \
-    --repo bouffalolab/bouffalo_vela_sdk \
+    --repo bouffalolab/vela-manifest \
     --title "BL Vela SDK ${VERSION}" \
     --notes-file "${WORK}/RELEASE_NOTES.md" \
-    "${WORK}/bouffalo_vela_sdk/manifests/tags/bl-vela-sdk-${VERSION}.xml"
+    "${WORK}/vela-manifest/manifests/tags/bl-vela-sdk-${VERSION}.xml"
 }
 
 # ============================================================================

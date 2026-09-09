@@ -19,7 +19,7 @@
 **职责边界（已与各方约定）**
 - **基线来源**：以 github/open-vela 的 `trunk-5.5` tag 为准。小米 Vela 保证该 tag 与其内部基线等价。
 - **集成清单归属**：最终产品 manifest 由**下游产品团队拥有**，引用本 SDK 的 vendor tag。本仓的 manifest 仅用于 BL 自家 CI / 发版 / 验证基准。
-- **Review 门禁**：BL **自管主线**（vendor_bouffalolab 等仓）；下游产品团队仅在采纳某个 SDK tag 进产品时做准入 review。
+- **Review 门禁**：BL **自管主线**（vela-vendor-bouffalolab 等仓）；下游产品团队仅在采纳某个 SDK tag 进产品时做准入 review。
 - **源与分发分离**：源码 + review 在 BL 内部 gerrit；github 是**对外分发镜像**，下游消费方永不接触内部仓。
 
 ---
@@ -28,10 +28,10 @@
 
 ```
 github/open-vela/*                         OS 基座（小米 Vela，trunk-5.5 tag）
-github/bouffalolab/bouffalo_vela_sdk       ← 本仓：manifest + CI + 发版入口
-github/bouffalolab/nuttx                   OpenVela NuttX 的 public SDK 集成 fork
-github/bouffalolab/nuttx-apps              OpenVela apps 的 public SDK 集成 fork
-github/bouffalolab/vendor_bouffalolab      BL 适配层：芯片/板级/驱动/中间件/示例/工具（源码镜像）
+github/bouffalolab/vela-manifest            ← 本仓：manifest + CI + 发版入口
+github/bouffalolab/vela-nuttx               OpenVela NuttX 的 public SDK 集成 fork
+github/bouffalolab/vela-nuttx-apps          OpenVela apps 的 public SDK 集成 fork
+github/bouffalolab/vela-vendor-bouffalolab  BL 适配层：芯片/板级/驱动/中间件/示例/工具（源码镜像）
 github/bouffalolab/bl_lhal                 寄存器级 HAL（源码，复用自 bouffalo_sdk）
 github/bouffalolab/bl_wireless             无线协议栈（★预编译库 .a，方案 A）
 github/bouffalolab/bl_phyrf                PHY/RF 校准（★预编译库 .a，方案 A）
@@ -47,10 +47,10 @@ github/bouffalolab/bl_phyrf                PHY/RF 校准（★预编译库 .a，
 > 两个 remote 用的是**相对路径**（`../open-vela/`、`../bouffalolab/`），
 > 即 open-vela 与 bouffalolab 必须与本清单仓位于同一 Git host 的同级命名空间下。
 
-### vendor_bouffalolab 内部结构
+### vela-vendor-bouffalolab 内部结构
 
 ```
-vendor_bouffalolab/
+vela-vendor-bouffalolab/
 ├── chips/          芯片移植（custom chip；按 defconfig CONFIG_ARCH_CHIP_CUSTOM_DIR 纳入）
 ├── boards/         板级（custom board；按 CONFIG_ARCH_BOARD_CUSTOM_DIR 纳入）
 ├── drivers/        驱动 —— 各自独立 .a（顶层 nuttx_add_subdirectory 自动发现）
@@ -85,7 +85,7 @@ vendor_bouffalolab/
 
 ### 4.1 开发 / 跟最新（开发清单）
 ```bash
-repo init -u git@github.com:bouffalolab/bouffalo_vela_sdk.git \
+repo init -u git@github.com:bouffalolab/vela-manifest.git \
           -b release/trunk-5.5 \
           -m manifests/bl-vela-sdk.xml
 repo sync -j8
@@ -96,7 +96,7 @@ vendor/bouffalolab/vela build \
   bl616cl/ai-m64l-32s-kit/configs/nsh -j14
 ```
 > 开发清单仍以 openvela `trunk` 作为普通 project 的默认基线；`apps` 和 `nuttx` 例外，
-> 跟随 public 的 `bouffalolab/nuttx-apps:trunk`、`bouffalolab/nuttx:trunk`。组织主线 PR
+> 跟随 public 的 `bouffalolab/vela-nuttx-apps:trunk`、`bouffalolab/vela-nuttx:trunk`。组织主线 PR
 > 合并前必须绑定 fresh sync、BL616CL 构建和受影响能力回归证据，并由非作者 review
 > 核对；required CI checks 建立后再将这些门禁自动化。发布清单才固定精确 SHA。
 >
@@ -106,7 +106,7 @@ vendor/bouffalolab/vela build \
 
 ### 4.2 复现某个发版（冻结快照）
 ```bash
-repo init -u git@github.com:bouffalolab/bouffalo_vela_sdk.git \
+repo init -u git@github.com:bouffalolab/vela-manifest.git \
           -b bl-vela-sdk-trunk-5.5.1 \
           -m manifests/tags/bl-vela-sdk-trunk-5.5.1.xml
 repo sync -j8
@@ -130,7 +130,7 @@ repo sync -j8
 ```
 内部 gerrit 源（review 通过）
   │
-  ├─ vendor_bouffalolab / lhal ── 镜像 push ──▶ github 源码仓 + 打 tag
+  ├─ vela-vendor-bouffalolab / lhal ── 镜像 push ──▶ github 源码仓 + 打 tag
   │
   ├─ wireless / phyrf ── 内部编 .a（openvela 同款工具链）──▶ github 库仓 + 打 tag
   │
@@ -145,7 +145,7 @@ repo sync -j8
 
 ## 6. ⚠️ 主线纪律（治理关键）
 
-**任何为某个产品做的驱动改动，必须同步进 `vendor_bouffalolab` 主线。**
+**任何为某个产品做的驱动改动，必须同步进 `vela-vendor-bouffalolab` 主线。**
 
 否则会出现「产品分支领先、SDK 主线腐烂」——这正是本 SDK 要消除的风险。
 建议在 CI 卡：产品分支的驱动 commit 若无对应主线 cherry-pick，标红告警。
