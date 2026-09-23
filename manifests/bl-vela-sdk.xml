@@ -2,6 +2,7 @@
 <manifest>
   <remote name="openvela" fetch="../open-vela/" />
   <remote name="bouffalo" fetch="../bouffalolab/" />
+  <remote name="blgerrit" fetch="ssh://gerrit.bouffalolab.com:29418/" />
 
   <default remote="openvela" revision="trunk" />
 
@@ -175,6 +176,11 @@
     <linkfile src="vela" dest="vela" />
   </project>
   <project path="vendor/bouffalolab/drivers" name="bouffalo_sdk-drivers" remote="bouffalo" revision="master" />
+  <project path="vendor/bouffalolab/components/wireless/wifi/bl_wpa_supplicant/bl_wpa_supplicant"
+           name="bouffalo_sdk-bl_wpa_supplicant" remote="bouffalo" revision="master" />
+  <project path="vendor/bouffalolab/components/wireless/wifi/macsw/macsw" name="bouffalo/components/wifi6/macsw" remote="blgerrit" revision="master" />
+  <project path="vendor/bouffalolab/components/wireless/wifi/wl80211/wl80211" name="bouffalo/components/wl80211/public" remote="blgerrit" revision="master" />
+  <project path="vendor/bouffalolab/components/wireless/wifi/wl80211/wl80211/src" name="bouffalo/components/wl80211/private" remote="blgerrit" revision="master" />
 
   <!-- openvela prebuilt gcc bare-metal toolchain -->
   <project path="prebuilts/gcc/linux-x86_64/riscv-none-elf" name="prebuilts_gcc_linux-x86_64_riscv-none-elf" clone-depth="1" groups="notdefault,platform-linux" />
