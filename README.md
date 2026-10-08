@@ -31,6 +31,7 @@ github/open-vela/*                         OS 基座（小米 Vela，trunk-5.5 t
 github/bouffalolab/vela-manifest            ← 本仓：manifest + CI + 发版入口
 github/bouffalolab/vela-nuttx               OpenVela NuttX 的 public SDK 集成 fork
 github/bouffalolab/vela-nuttx-apps          OpenVela apps 的 public SDK 集成 fork
+github/bouffalolab/vela-external-zblue      OpenVela zblue（BLE host）的 public SDK 集成 fork
 github/bouffalolab/vela-vendor-bouffalolab  BL 适配层：芯片/板级/驱动/中间件/示例/工具（源码镜像）
 github/bouffalolab/bl_lhal                 寄存器级 HAL（源码，复用自 bouffalo_sdk）
 github/bouffalolab/bl_wireless             无线协议栈（★预编译库 .a，方案 A）
@@ -41,7 +42,7 @@ github/bouffalolab/bl_phyrf                PHY/RF 校准（★预编译库 .a，
 > 只把库 + 公开头文件推到 github。详见 §5。
 
 > **当前状态**：`manifests/bl-vela-sdk.xml` 以 openvela trunk 全量基座为默认来源，
-> `nuttx`/`apps` 跟随已合入补丁的 Bouffalo Lab public fork `trunk`；BL616CL chip、
+> `nuttx`/`apps`/`external/zblue/zblue` 跟随已合入补丁的 Bouffalo Lab public fork `trunk`；BL616CL chip、
 > Ai-M64L-32S-Kit board、LHAL wrapper 和只读 drivers project 已接入并完成标准构建与
 > 实板回归。无线预编译库仍按具体 SDK 版本独立冻结；收敛路径见 §7。
 > 两个 remote 用的是**相对路径**（`../open-vela/`、`../bouffalolab/`），
@@ -103,6 +104,12 @@ vendor/bouffalolab/vela build \
 > `repo` 为 project checkout 配置 `filter.lfs.*=--skip`，所以 `repo sync` 成功不代表
 > `vendor/bouffalolab` 的 LFS 文件已展开。缺少上述 `git lfs pull` 时，固件后处理工具仍是
 > LFS pointer，后处理阶段会失败；这不应记录成源码编译失败。
+>
+> 清单改了某个 project 的 `name`（如 `external/zblue/zblue` 改为 `vela-external-zblue`）后，
+> 已有工作区要用 `repo sync --force-sync <path>`，它会删掉并重建该 project 的工作目录。
+> 若报 `hooks is different`，先删除 `.repo/projects/<path>.git` 和
+> `.repo/project-objects/<新 name>.git` 再重试。被重建的 project 里嵌套的其他 project
+> （如 `nuttx`、`apps` 下的第三方库）会被一起删掉，之后用 `repo sync -l` 从本地对象恢复。
 
 ### 4.2 复现某个发版（冻结快照）
 ```bash
