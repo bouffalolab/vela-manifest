@@ -89,6 +89,9 @@ vela-vendor-bouffalolab/
 `manifests/bl-vela-sdk-release.xml` 与开发清单相同，只是不含内部源码仓；Wi-Fi 的
 macsw/wl80211 使用 `vendor/bouffalolab` 中的预编译包。它跟踪各 project 的分支，不固定版本。
 
+先安装 `repo` 和 `git-lfs`，并执行一次 `git lfs install`（开发清单同样需要）。`repo sync`
+不下载 LFS 对象，必须再执行下面的 `lfs pull`，原因见 4.1 的说明。
+
 ```bash
 repo init -u https://github.com/bouffalolab/vela-manifest.git \
           -b main -m manifests/bl-vela-sdk-release.xml
