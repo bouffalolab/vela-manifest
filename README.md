@@ -103,7 +103,7 @@ git -C vendor/bouffalolab lfs pull bouffalo
 ### 4.1 开发 / 跟最新（开发清单）
 ```bash
 repo init -u git@github.com:bouffalolab/vela-manifest.git \
-          -b release/trunk-5.5 \
+          -b main \
           -m manifests/bl-vela-sdk.xml
 repo sync -j8
 # repo checkout 会跳过 LFS smudge，构建前显式拉取 vendor 工具二进制
