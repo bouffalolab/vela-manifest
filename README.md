@@ -2,9 +2,10 @@
 
 芯片原厂（Bouffalo Lab）维护的、基于 openvela 的长期演进 SDK。
 
-> **一句话定位**：本仓库 = **集成清单 + CI + 发版入口**，不放驱动源码。
-> 它用 repo manifest 把「openvela 基座 + BL 驱动适配层 + 复用驱动仓」三者钉版冻结，
-> 让任何人都能 100% 复现某个 SDK 版本。
+> **一句话定位**：本仓库 = **集成清单 + 发版入口**，不放驱动源码。
+> 它用 repo manifest 组合「openvela 基座 + BL 驱动适配层 + 复用驱动仓」。设计目标是按版本
+> 钉版冻结、让任何人都能复现某个 SDK 版本；**当前仍在开发期**，两份清单都跟踪各仓分支，
+> 还没有发版快照（见 §3、§4.2）。
 
 ---
 
@@ -12,41 +13,43 @@
 
 | 层 | 内容 | Owner | 载体 |
 |---|---|---|---|
-| OS 基座 | openvela | 小米 Vela | github/open-vela（**trunk-5.5 tag 为同步点**） |
+| OS 基座 | openvela | 小米 Vela | github/open-vela（开发期跟 `trunk`；发版同步点按设计为 `trunk-5.5` tag） |
 | **BL Vela SDK** | 基座 + BL 芯片移植/驱动/板级 + 复用驱动 | **Bouffalo Lab（本仓）** | 本仓 + vendor/bl 系列仓 |
 | 产品 | SDK + 业务代码 | 下游产品团队 | 产品内部仓（拉分支作为产品 commit 原点） |
 
 **职责边界（已与各方约定）**
-- **基线来源**：以 github/open-vela 的 `trunk-5.5` tag 为准。小米 Vela 保证该 tag 与其内部基线等价。
-- **集成清单归属**：最终产品 manifest 由**下游产品团队拥有**，引用本 SDK 的 vendor tag。本仓的 manifest 仅用于 BL 自家 CI / 发版 / 验证基准。
-- **Review 门禁**：BL **自管主线**（vela-vendor-bouffalolab 等仓）；下游产品团队仅在采纳某个 SDK tag 进产品时做准入 review。
-- **源与分发分离**：源码 + review 在 BL 内部 gerrit；github 是**对外分发镜像**，下游消费方永不接触内部仓。
+- **基线来源**：发版以 github/open-vela 的 `trunk-5.5` tag 为准，小米 Vela 保证该 tag 与其内部基线等价；开发期清单跟踪 openvela `trunk`。
+- **集成清单归属**：最终产品 manifest 由**下游产品团队拥有**，引用本 SDK 的发版 tag（发版流程建立后）。本仓的 manifest 用于 BL 自家开发、发版和验证基准。
+- **Review 门禁**：BL **自管主线**（vela-vendor-bouffalolab 等仓）；下游产品团队仅在采纳某个 SDK 版本进产品时做准入 review。
+- **源与分发**：vela-vendor-bouffalolab 和三个 openvela fork 直接在 GitHub 开发；drivers、supplicant 是 Bouffalo SDK 对应目录的只读镜像；macsw、wl80211 源码只在内部仓，对外以预编译包形式放在 vela-vendor-bouffalolab。使用对外清单的用户不接触内部仓。
 
 ---
 
 ## 2. 仓库拓扑
 
 ```
-github/open-vela/*                         OS 基座（小米 Vela，trunk-5.5 tag）
-github/bouffalolab/vela-manifest            ← 本仓：manifest + CI + 发版入口
-github/bouffalolab/vela-nuttx               OpenVela NuttX 的 public SDK 集成 fork
-github/bouffalolab/vela-nuttx-apps          OpenVela apps 的 public SDK 集成 fork
-github/bouffalolab/vela-external-zblue      OpenVela zblue（BLE host）的 public SDK 集成 fork
-github/bouffalolab/vela-vendor-bouffalolab  BL 适配层：芯片/板级/驱动/中间件/示例/工具（源码镜像）
-github/bouffalolab/bl_lhal                 寄存器级 HAL（源码，复用自 bouffalo_sdk）
-github/bouffalolab/bl_wireless             无线协议栈（★预编译库 .a，方案 A）
-github/bouffalolab/bl_phyrf                PHY/RF 校准（★预编译库 .a，方案 A）
+github/open-vela/*                                OS 基座（默认 revision trunk）
+github/bouffalolab/vela-manifest                  ← 本仓：manifest（main 分支）
+github/bouffalolab/vela-nuttx                     OpenVela NuttX 的 public SDK 集成 fork（trunk）
+github/bouffalolab/vela-nuttx-apps                OpenVela apps 的 public SDK 集成 fork（trunk）
+github/bouffalolab/vela-external-zblue            OpenVela zblue（BLE host）的 public SDK 集成 fork（trunk）
+github/bouffalolab/vela-vendor-bouffalolab        BL 适配层 → vendor/bouffalolab（trunk）
+github/bouffalolab/bouffalo_sdk-drivers           Bouffalo SDK drivers/ 只读镜像（lhal、soc、rfparam、
+                                                  预编译 phyrf）→ vendor/bouffalolab/drivers（master）
+github/bouffalolab/bouffalo_sdk-bl_wpa_supplicant Bouffalo SDK supplicant 只读镜像（master）
+内部仓 macsw、wl80211 public/private             仅开发清单引用（remote blgerrit）
 ```
 
-> **方案 A**：wireless / phyrf 不公开源码——在 BL 内部用 openvela 同款工具链编成 `.a`，
-> 只把库 + 公开头文件推到 github。详见 §5。
-
-> **当前状态**：`manifests/bl-vela-sdk.xml` 以 openvela trunk 全量基座为默认来源，
-> `nuttx`/`apps`/`external/zblue/zblue` 跟随已合入补丁的 Bouffalo Lab public fork `trunk`；BL616CL chip、
-> Ai-M64L-32S-Kit board、LHAL wrapper 和只读 drivers project 已接入并完成标准构建与
-> 实板回归。无线预编译库仍按具体 SDK 版本独立冻结；收敛路径见 §7。
-> 两个 remote 用的是**相对路径**（`../open-vela/`、`../bouffalolab/`），
-> 即 open-vela 与 bouffalolab 必须与本清单仓位于同一 Git host 的同级命名空间下。
+> **无线库**：macsw、wl80211 不公开源码。对外清单使用 vela-vendor-bouffalolab 中用 openvela
+> 工具链编出的预编译包（`components/wireless/wifi/{macsw,wl80211}/prebuilt/`），BLE controller
+> 预编译库也提交在 vela-vendor-bouffalolab，phyrf 预编译库随 drivers 镜像发布。
+>
+> **当前状态**：两份清单都以 openvela trunk 全量基座为默认来源，`nuttx`/`apps`/`external/zblue/zblue`
+> 跟随 Bouffalo Lab public fork `trunk`。BL616CL chip、Ai-M64L-32S-Kit board、驱动 wrapper、
+> Wi-Fi STA 和 BLE 已接入并完成构建与实板回归；收敛路径见 §7。
+> `openvela`、`bouffalo` 两个 remote 用的是**相对路径**（`../open-vela/`、`../bouffalolab/`），
+> 即 open-vela 与 bouffalolab 必须与本清单仓位于同一 Git host 的同级命名空间下；
+> 开发清单另有指向内部仓的 `blgerrit` remote。
 
 ### vela-vendor-bouffalolab 内部结构
 
@@ -54,21 +57,26 @@ github/bouffalolab/bl_phyrf                PHY/RF 校准（★预编译库 .a，
 vela-vendor-bouffalolab/
 ├── chips/          芯片移植（custom chip；按 defconfig CONFIG_ARCH_CHIP_CUSTOM_DIR 纳入）
 ├── boards/         板级（custom board；按 CONFIG_ARCH_BOARD_CUSTOM_DIR 纳入）
-├── drivers/        驱动 —— 各自独立 .a（顶层 nuttx_add_subdirectory 自动发现）
-├── components/     中间件/可复用组件 —— 各自独立 .a（含"外层包装"导入独立仓，如 lhal）
-├── examples/       示例 app（nuttx_add_application）
-├── tools/          宿主侧脚本/烧录（★无 CMakeLists，不编入固件）
+├── drivers/        独立 project（drivers 只读镜像），由 cmake/ 下的 wrapper 显式选择源码
+├── components/     中间件（wireless/：wifi、ble、rfparam），顶层自动发现
+├── apps/           测试与示例 app（nuttx_add_application），顶层自动发现
+├── cmake/          构建辅助（驱动 wrapper、组件 helper、Wi-Fi 源码/预编译选择）
+├── docs/           BL616CL 功能文档
+├── tools/          宿主侧工具（固件后处理、FlashCube、性能工具；无 CMakeLists，不编入固件）
+├── vela            构建/烧录入口（manifest 链接到 SDK 根目录）
 ├── CMakeLists.txt  顶层接入：nuttx_add_subdirectory + Kconfig 菜单 "Bouffalo Lab"
 └── LICENSE         Apache-2.0
 ```
 
-> chips/boards 由 kernel/arch 侧按 custom-dir 纳入；components/examples 由顶层一层
-> glob 自动发现；drivers 由显式 CMake wrapper 选择，tools 不编入固件。构建走
-> CMake+Ninja，细节见仓内 `README.md`。
+> chips/boards 由 kernel/arch 侧按 custom-dir 纳入；components/apps 由顶层逐层 glob
+> 自动发现；drivers 由显式 CMake wrapper 选择，tools 不编入固件。构建走
+> CMake+Ninja，细节见该仓 `README.md`。
 
 ---
 
-## 3. 版本号语义
+## 3. 版本号语义（设计，尚未实施）
+
+当前没有 release 分支和发版 tag，本节是后续自动化发版的约定。
 
 格式：`bl-vela-sdk-<openvela基线>.<SDK迭代号>`，例：`bl-vela-sdk-trunk-5.5.1`
 
@@ -77,8 +85,9 @@ vela-vendor-bouffalolab/
 - 分支：`release/trunk-5.5` 持续出 `5.5.0 / 5.5.1 / …`。
 - openvela 升到 5.6 → 拉 `release/trunk-5.6` 出 `5.6.0`，**同时 5.5.x 继续维护一段时间**（双线并行）。
 
-**预编译库的版本绑定（硬约束）**：`bl_wireless` / `bl_phyrf` 的 ABI 必须与 openvela 基线工具链一致。
-基线换工具链（如 5.5→5.6）→ 这两个库**必须重编重发**，tag 随基线走（`wireless-trunk-5.5.1`）。
+**预编译库的版本绑定（硬约束）**：macsw/wl80211 预编译包、phyrf 和 BLE controller 库的 ABI
+必须与 openvela 基线工具链一致。macsw/wl80211 预编译包是 fat LTO 对象，只能配编出它的
+GCC 版本；基线换工具链（如 5.5→5.6）时必须重新导出，其余预编译库须重新验证或重编。
 
 ---
 
@@ -128,41 +137,44 @@ vendor/bouffalolab/vela build \
 > （如 `nuttx`、`apps` 下的第三方库）会被一起删掉，之后用 `repo sync -l` 从本地对象恢复。
 
 ### 4.2 复现某个发版（冻结快照）
+
+暂无可复现的发版：本仓远端只有 `main` 分支，没有发版 tag。
+
+`manifests/tags/bl-vela-sdk-trunk-5.5.1.xml` 是早期样例：它把 openvela 钉在
+`refs/tags/trunk-5.5`，且没有纳入 `vendor/bouffalolab`，不能复现当前 BL616CL SDK。
+需要查看时从 `main` 初始化：
+
 ```bash
-repo init -u git@github.com:bouffalolab/vela-manifest.git \
-          -b bl-vela-sdk-trunk-5.5.1 \
-          -m manifests/tags/bl-vela-sdk-trunk-5.5.1.xml
-repo sync -j8
+repo init -u https://github.com/bouffalolab/vela-manifest.git \
+          -b main -m manifests/tags/bl-vela-sdk-trunk-5.5.1.xml
 ```
 
-> `5.5.1` 是历史清单：它仍使用 `refs/tags/trunk-5.5`，且没有纳入当前
-> `vendor/bouffalolab`，不满足现行“逐 project 精确 SHA + 完整 BL project 集合”的
-> 冻结合同，不能据此声称当前 BL616CL SDK bit-for-bit 可复现。后续发版必须新建由
-> `repo manifest -r` 生成并完成 fresh sync/build 回归的 tag manifest；历史文件不修改。
+> 后续发版必须新建由 `repo manifest -r` 生成、逐 project 精确 SHA、包含完整 BL project
+> 集合并完成 fresh sync/build 回归的 tag manifest；历史样例不修改。
 
 ### 4.3 下游产品消费（产品侧）
-产品侧在自己的 product manifest 中引用本 SDK 的 vendor tag，叠加业务码后发版。
-本 SDK 的冻结快照可作为产品 manifest 的 `<include>` 基底。
+发版流程建立后，产品侧在自己的 product manifest 中引用本 SDK 的发版 tag，叠加业务码后发版；
+本 SDK 的冻结快照可作为产品 manifest 的 `<include>` 基底。在此之前只能基于跟踪分支的清单
+自行记录 SHA。
 
 ---
 
-## 5. 发版流程
+## 5. 发版流程（待建立）
 
-由 `scripts/release.sh` 自动化，串起：
+自动化发版流程尚未建立，计划包含：
 
 ```
-内部 gerrit 源（review 通过）
+内部仓 macsw/wl80211 更新 ── 用 openvela 工具链重新导出预编译包 ──▶ vela-vendor-bouffalolab
   │
-  ├─ vela-vendor-bouffalolab / lhal ── 镜像 push ──▶ github 源码仓 + 打 tag
-  │
-  ├─ wireless / phyrf ── 内部编 .a（openvela 同款工具链）──▶ github 库仓 + 打 tag
+  ├─ 各仓打 tag（vendor、openvela fork、drivers/supplicant 镜像对应版本）
   │
   ├─ 同步出完整树 → repo manifest -r → 冻结快照 tags/bl-vela-sdk-X.Y.Z.xml ──▶ 本仓
   │
   └─ gh release create（附冻结清单 + Release Notes）
 ```
 
-执行：`scripts/release.sh trunk-5.5.1`（脚本内 TODO 项需按内部实际地址/工具链填充）。
+目前 macsw/wl80211 预编译包由 vela-vendor-bouffalolab 的 `tools/bl616cl/export_wifi_prebuilt.sh`
+手动导出。`scripts/release.sh` 是早期占位脚本，内容已过时，不要使用。
 
 ---
 
@@ -200,8 +212,7 @@ fresh sync、完成 BL616CL 标准构建和运行回归，再逐步收敛。
 
 ## 8. CI
 
-`.github/workflows/ci-build.yml`：仅 BL616/BL618 编译冒烟。
-public 仓 + github 标准 runner = 免费。重型全量编译/测试仍在内部 CI。
+暂无自动 CI：本仓没有 workflow。合入前按 §4.1 的要求手动完成 fresh sync、构建和回归。
 
 ---
 
@@ -209,12 +220,12 @@ public 仓 + github 标准 runner = 免费。重型全量编译/测试仍在内�
 
 ```
 manifests/
-  bl-vela-sdk.xml                   开发清单（openvela 基座 + BL OS fork trunk）
+  bl-vela-sdk.xml                   开发清单（openvela 基座 + BL fork trunk + 内部无线源码仓）
   bl-vela-sdk-release.xml           对外清单（不含内部源码仓，Wi-Fi 用预编译包）
   tags/
-    bl-vela-sdk-trunk-5.5.1.xml     冻结快照样例（发版时脚本生成，钉 refs/tags/trunk-5.5）
+    bl-vela-sdk-trunk-5.5.1.xml     早期冻结快照样例（钉 refs/tags/trunk-5.5，不含 vendor）
 scripts/
-  release.sh                        发版自动化（内部→github）
+  release.sh                        早期发版占位脚本（已过时，不要使用）
 ```
 > repo init 入口由 `.repo/manifest.xml` 经 `<include name="manifests/bl-vela-sdk.xml"/>`
 > 选定，已无独立的 `default.xml`。
