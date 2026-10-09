@@ -84,6 +84,19 @@ vela-vendor-bouffalolab/
 
 ## 4. 使用方式
 
+### 4.0 对外使用（对外清单）
+
+`manifests/bl-vela-sdk-release.xml` 与开发清单相同，只是不含内部源码仓；Wi-Fi 的
+macsw/wl80211 使用 `vendor/bouffalolab` 中的预编译包。它跟踪各 project 的分支，不固定版本。
+
+```bash
+repo init -u https://github.com/bouffalolab/vela-manifest.git \
+          -b main -m manifests/bl-vela-sdk-release.xml
+repo sync -j8
+git -C vendor/bouffalolab lfs pull bouffalo
+./vela build ai-m64l-32s-kit/wifi
+```
+
 ### 4.1 开发 / 跟最新（开发清单）
 ```bash
 repo init -u git@github.com:bouffalolab/vela-manifest.git \
@@ -194,6 +207,7 @@ public 仓 + github 标准 runner = 免费。重型全量编译/测试仍在内�
 ```
 manifests/
   bl-vela-sdk.xml                   开发清单（openvela 基座 + BL OS fork trunk）
+  bl-vela-sdk-release.xml           对外清单（不含内部源码仓，Wi-Fi 用预编译包）
   tags/
     bl-vela-sdk-trunk-5.5.1.xml     冻结快照样例（发版时脚本生成，钉 refs/tags/trunk-5.5）
 scripts/
