@@ -45,7 +45,7 @@ github/bouffalolab/bouffalo_sdk-bl_wpa_supplicant Bouffalo SDK supplicant 只读
 > 预编译库也提交在 vela-vendor-bouffalolab，phyrf 预编译库随 drivers 镜像发布。
 >
 > **当前状态**：两份清单都以 openvela trunk 全量基座为默认来源，`nuttx`/`apps`/`external/zblue/zblue`
-> 跟随 Bouffalo Lab public fork `trunk`。BL616CL chip、Ai-M64L-32S-Kit board、驱动 wrapper、
+> 跟随 Bouffalo Lab public fork `trunk`。BL616CL chip、Ai-M64P-32S-Kit board、驱动 wrapper、
 > Wi-Fi STA 和 BLE 已接入并完成构建与实板回归；收敛路径见 §7。
 > `openvela`、`bouffalo` 两个 remote 用的是**相对路径**（`../open-vela/`、`../bouffalolab/`），
 > 即 open-vela 与 bouffalolab 必须与本清单仓位于同一 Git host 的同级命名空间下；
@@ -106,7 +106,7 @@ repo init -u https://github.com/bouffalolab/vela-manifest.git \
           -b main -m manifests/bl-vela-sdk-release.xml
 repo sync -j8
 git -C vendor/bouffalolab lfs pull bouffalo
-./vela build ai-m64l-32s-kit/wifi
+./vela build ai-m64p-32s-kit/wifi
 ```
 
 ### 4.1 开发 / 跟最新（开发清单）
@@ -119,7 +119,7 @@ repo sync -j8
 git -C vendor/bouffalolab lfs pull bouffalo
 # BL616CL 标准构建入口（CMake + Ninja）
 vendor/bouffalolab/vela build \
-  bl616cl/ai-m64l-32s-kit/configs/nsh -j14
+  bl616cl/ai-m64p-32s-kit/configs/nsh -j14
 ```
 > 开发清单仍以 openvela `trunk` 作为普通 project 的默认基线；`apps` 和 `nuttx` 例外，
 > 跟随 public 的 `bouffalolab/vela-nuttx-apps:trunk`、`bouffalolab/vela-nuttx:trunk`。组织主线 PR
@@ -196,7 +196,7 @@ fresh sync、完成 BL616CL 标准构建和运行回归，再逐步收敛。
 
 ```
 1. 接入 BL 适配层：已接入 vendor/bouffalolab 与只读 drivers project
-2. 维护 BL616CL Ai-M64L-32S-Kit 的可复现 defconfig
+2. 维护 BL616CL Ai-M64P-32S-Kit 的可复现 defconfig
 3. repo sync 全量 → LFS pull → BL616CL 编译和运行回归，记录实际被引用的 project
 4. 反向裁剪：删掉编译用不到的子系统
 5. 回到 3，迭代到能干净编出固件 → 剩下的就是真实最小闭包
