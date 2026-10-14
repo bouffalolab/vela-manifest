@@ -21,7 +21,7 @@
 - **基线来源**：发版以 github/open-vela 的 `trunk-5.5` tag 为准，小米 Vela 保证该 tag 与其内部基线等价；开发期清单跟踪 openvela `trunk`。
 - **集成清单归属**：最终产品 manifest 由**下游产品团队拥有**，引用本 SDK 的发版 tag（发版流程建立后）。本仓的 manifest 用于 BL 自家开发、发版和验证基准。
 - **Review 门禁**：BL **自管主线**（vela-vendor-bouffalolab 等仓）；下游产品团队仅在采纳某个 SDK 版本进产品时做准入 review。
-- **源与分发**：vela-vendor-bouffalolab 和三个 openvela fork 直接在 GitHub 开发；drivers、supplicant 是 Bouffalo SDK 对应目录的只读镜像；macsw、wl80211 源码只在内部仓，对外以预编译包形式放在 vela-vendor-bouffalolab。使用对外清单的用户不接触内部仓。
+- **源与分发**：vela-vendor-bouffalolab 和三个 openvela fork 直接在 GitHub 开发；drivers、supplicant、bflb_flash_tools 是 Bouffalo SDK 对应目录的只读镜像；macsw、wl80211 源码只在内部仓，对外以预编译包形式放在 vela-vendor-bouffalolab。使用对外清单的用户不接触内部仓。
 
 ---
 
@@ -37,6 +37,8 @@ github/bouffalolab/vela-vendor-bouffalolab        BL 适配层 → vendor/bouffa
 github/bouffalolab/bouffalo_sdk-drivers           Bouffalo SDK drivers/ 只读镜像（lhal、soc、rfparam、
                                                   预编译 phyrf）→ vendor/bouffalolab/drivers（master）
 github/bouffalolab/bouffalo_sdk-bl_wpa_supplicant Bouffalo SDK supplicant 只读镜像（master）
+github/bouffalolab/bflb_flash_tools               Bouffalo SDK tools/bflb_tools 只读快照镜像（后处理、FlashCube）
+                                                  → vendor/bouffalolab/tools/bflb_flash_tools（master，clone-depth=1）
 内部仓 macsw、wl80211 public/private             仅开发清单引用（remote blgerrit）
 ```
 
@@ -62,7 +64,8 @@ vela-vendor-bouffalolab/
 ├── apps/           测试与示例 app（nuttx_add_application），顶层自动发现
 ├── cmake/          构建辅助（驱动 wrapper、组件 helper、Wi-Fi 源码/预编译选择）
 ├── docs/           BL616CL 功能文档
-├── tools/          宿主侧工具（固件后处理、FlashCube、性能工具；无 CMakeLists，不编入固件）
+├── tools/          宿主侧工具（后处理 wrapper、性能工具；无 CMakeLists，不编入固件），
+│                   tools/bflb_flash_tools 是独立 project（后处理和 FlashCube 二进制）
 ├── vela            构建/烧录入口（manifest 链接到 SDK 根目录）
 ├── CMakeLists.txt  顶层接入：nuttx_add_subdirectory + Kconfig 菜单 "Bouffalo Lab"
 └── LICENSE         Apache-2.0

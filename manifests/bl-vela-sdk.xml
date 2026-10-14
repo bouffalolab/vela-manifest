@@ -176,6 +176,7 @@
     <linkfile src="vela" dest="vela" />
   </project>
   <project path="vendor/bouffalolab/drivers" name="bouffalo_sdk-drivers" remote="bouffalo" revision="master" />
+  <project path="vendor/bouffalolab/tools/bflb_flash_tools" name="bflb_flash_tools" remote="bouffalo" revision="master" clone-depth="1" />
   <project path="vendor/bouffalolab/components/wireless/wifi/bl_wpa_supplicant/bl_wpa_supplicant"
            name="bouffalo_sdk-bl_wpa_supplicant" remote="bouffalo" revision="master" />
   <project path="vendor/bouffalolab/components/wireless/wifi/macsw/macsw" name="bouffalo/components/wifi6/macsw" remote="blgerrit" revision="master" />
