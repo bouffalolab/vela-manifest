@@ -98,14 +98,12 @@ GCC 版本；基线换工具链（如 5.5→5.6）时必须重新导出，其余
 `manifests/bl-vela-sdk-release.xml` 与开发清单相同，只是不含内部源码仓；Wi-Fi 的
 macsw/wl80211 使用 `vendor/bouffalolab` 中的预编译包。它跟踪各 project 的分支，不固定版本。
 
-先安装 `repo` 和 `git-lfs`，并执行一次 `git lfs install`（开发清单同样需要）。`repo sync`
-不下载 LFS 对象，必须再执行下面的 `lfs pull`，原因见 4.1 的说明。
+先安装 `repo`。BL 自管的仓都不使用 Git LFS，`repo sync` 即可拿到全部文件。
 
 ```bash
 repo init -u https://github.com/bouffalolab/vela-manifest.git \
           -b main -m manifests/bl-vela-sdk-release.xml
 repo sync -j8
-git -C vendor/bouffalolab lfs pull bouffalo
 ./vela build ai-m64p-32s-kit/wifi
 ```
 
@@ -115,8 +113,6 @@ repo init -u git@github.com:bouffalolab/vela-manifest.git \
           -b main \
           -m manifests/bl-vela-sdk.xml
 repo sync -j8
-# repo checkout 会跳过 LFS smudge，构建前显式拉取 vendor 工具二进制
-git -C vendor/bouffalolab lfs pull bouffalo
 # BL616CL 标准构建入口（CMake + Ninja）
 vendor/bouffalolab/vela build \
   bl616cl/ai-m64p-32s-kit/configs/nsh -j14
@@ -125,10 +121,6 @@ vendor/bouffalolab/vela build \
 > 跟随 public 的 `bouffalolab/vela-nuttx-apps:trunk`、`bouffalolab/vela-nuttx:trunk`。组织主线 PR
 > 合并前必须绑定 fresh sync、BL616CL 构建和受影响能力回归证据，并由非作者 review
 > 核对；required CI checks 建立后再将这些门禁自动化。发布清单才固定精确 SHA。
->
-> `repo` 为 project checkout 配置 `filter.lfs.*=--skip`，所以 `repo sync` 成功不代表
-> `vendor/bouffalolab` 的 LFS 文件已展开。缺少上述 `git lfs pull` 时，固件后处理工具仍是
-> LFS pointer，后处理阶段会失败；这不应记录成源码编译失败。
 >
 > 清单改了某个 project 的 `name`（如 `external/zblue/zblue` 改为 `vela-external-zblue`）后，
 > 已有工作区要用 `repo sync --force-sync <path>`，它会删掉并重建该 project 的工作目录。
@@ -197,7 +189,7 @@ fresh sync、完成 BL616CL 标准构建和运行回归，再逐步收敛。
 ```
 1. 接入 BL 适配层：已接入 vendor/bouffalolab 与只读 drivers project
 2. 维护 BL616CL Ai-M64P-32S-Kit 的可复现 defconfig
-3. repo sync 全量 → LFS pull → BL616CL 编译和运行回归，记录实际被引用的 project
+3. repo sync 全量 → BL616CL 编译和运行回归，记录实际被引用的 project
 4. 反向裁剪：删掉编译用不到的子系统
 5. 回到 3，迭代到能干净编出固件 → 剩下的就是真实最小闭包
 ```
